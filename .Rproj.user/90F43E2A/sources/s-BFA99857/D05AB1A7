@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1571642166553.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3512478470",
+    "id" : "D05AB1A7",
+    "lastKnownWriteTime" : 1571642199,
+    "last_content_update" : 1571642200027,
+    "path" : "D:/UBIQUM/GITHUB/Task04_AssociationBetweenProducts/Task04_Script01.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "1,0",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
