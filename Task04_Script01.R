@@ -6,11 +6,12 @@ library(tidyr)
 library(mice)
 library(lubridate)
 
-#
-
-itm_df <- read.delim("D:/UBIQUM/GITHUB/Task04_AssociationBetweenProducts/lineitems1.csv", sep = ";")
-ord_df <- read.delim("D:/UBIQUM/GITHUB/Task04_AssociationBetweenProducts/orders_translated.csv", sep=";")
-trns_df<-read_csv("D:/UBIQUM/GITHUB/Task04_AssociationBetweenProducts/trans1.csv")
+# Load semicoln separated Values with csv2. From readr packagwe with underscore to have a tibble
+itm_df <- read_csv2(
+  file = "D:/UBIQUM/GITHUB/Task04_AssociationBetweenProducts/lineitems.csv"
+  )
+ord_df <- read_csv2("D:/UBIQUM/GITHUB/Task04_AssociationBetweenProducts/orders_translated.csv")
+trns_df <- read_csv2("D:/UBIQUM/GITHUB/Task04_AssociationBetweenProducts/trans.csv")
 
 #### CHECK NAs
 anyNA(itm_df)
@@ -66,7 +67,10 @@ ord_df2<-ord_df1 %>%
 
 #### FILTER OUT ONLY COMPLETE ORDERS. Total Orders found 46605
 ord_Completed<-ord_df1 %>%
-  filter(state == "Completed") 
+  filter(state == "Completed")
+
+ggplot(data = ord_df1, mapping = aes(x = state, y = total_paid)) +
+  geom_boxplot()
 
 #### Create Join Table
 
@@ -113,48 +117,49 @@ trans_id <- ord_df1 %>%
   filter(n > 1)
   nrow(trans_id) # show me the total quanity of observations
 
-# bind the id order from the item df with the transactions to assign an id to the table
+
+  # Binding Completed ID_Orders from ord_df1 with list of SKU from Transactions 
+  ord_trns<-trans_id %>%
+    bind_cols(trns_df)
+    nrow(ord_trns)
+
+  # Joining the itm_df to extract prod_qnt, unit_price and grouping by order
+  Tot_ord_trns<- 
+    ord_df %>%
+      drop_na(total_paid) %>% 
+      filter(state == "Completed") %>%
+      left_join(itm_df %>% select(id_order, product_quantity, unit_price), by = "id_order") %>% # find out product quanity
+      group_by(id_order)
   
-ord_trns<-trans_id %>%
-            bind_cols(trns_df)
+  # Binding id_order, qnt, list items
+  trans<-trans_id %>%
+    bind_cols(trns_df)
 
-md.pattern(ord_trns,plot = TRUE, rotate.names = TRUE)
+  # Filter the itm_df with the trans id_order findings, summearize bringing in sum(prod qnt * pu)
+  tot_itm<-itm_df %>% 
+    filter(id_order %in% unlist(trans)) %>% 
+    group_by(id_order) %>%
+    summarize(n = n(), tot_itm = sum(product_quantity * unit_price))
+  
+  # Perform an inner join with the ord_df1 to attain the ord total paid and all other columns
+  Data<-inner_join(ord_df1,tot_itm) %>% 
+    group_by(id_order) %>% 
+    summarise(created_date,yDate, state, qnt=n, total_paid, tot_itm, diff=total_paid-tot_itm)
+  
+  
+  itm_df %>% 
+    filter(id_order %in% Data$id_order) %>% 
+    select(id_order, sku) %>% 
+    left_join(kat, by = "sku") %>% 
+    select(-sku) %>% 
+    filter(!is.na(manual_categories)) %>% 
+    write_csv("D:/UBIQUM/GITHUB/Task04_AssociationBetweenProducts/trans_categories.csv")
 
-Tot_ord_trns<-ord_df1 %>%
-  filter(state == "Completed") %>%
-  left_join(itm_df %>% select(id_order, product_quantity, unit_price)) %>% # find out product quanity
-  group_by(id_order) %>% 
-  filter(product_quantity > 1)
+  # Plot down the Findings
+ggplot(data = Data) +
+  geom_point(mapping = aes(x = tot_itm, y = total_paid))
 
-nrow(Tot_ord_trns)
-
-md.pattern(Tot_ord_trns,plot = TRUE, rotate.names = TRUE)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# View Diff_Price 
+ggplot(data = Data, mapping = aes(x = state, y = diff)) +
+  geom_boxplot()
 
