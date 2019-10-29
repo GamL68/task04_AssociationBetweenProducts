@@ -100,10 +100,11 @@ ggplot(data = ord_df1, mapping = aes(x = state, y = total_paid)) +
 # Filter all items of Completed orders, where num of items is greater than 1
 ord_df1 %>%
   filter(state == "Completed") %>%
-  left_join(itm_df %>% select(id_order, product_quantity)) %>% # find out product quanity
+  left_join(itm_df %>% select(id_order, product_quantity, sku)) %>% # find out product quanity
   group_by(id_order) %>%
   summarise(n = n()) %>% # find out total quantity by order id
   filter(n > 1) %>% # take out all the orders with only 1 product
+  
   nrow() # show me the total quanity of observations
 
 # Filter all items whose transactions are completed and select those that have bought 
@@ -111,7 +112,7 @@ ord_df1 %>%
 
 trans_id <- ord_df1 %>%
   filter(state == "Completed") %>%
-  left_join(itm_df %>% select(id_order, product_quantity)) %>% # find out product quanity
+  left_join(itm_df %>% select(id_order, product_quantity, sku)) %>% # find out product quanity
   group_by(id_order) %>%
   summarise(n = n()) %>% # find out total quantity by order id
   filter(n > 1)
@@ -128,7 +129,7 @@ trans_id <- ord_df1 %>%
     ord_df %>%
       drop_na(total_paid) %>% 
       filter(state == "Completed") %>%
-      left_join(itm_df %>% select(id_order, product_quantity, unit_price), by = "id_order") %>% # find out product quanity
+      left_join(itm_df %>% select(id_order, product_quantity, unit_price, sku), by = "id_order") %>% # find out product quanity
       group_by(id_order)
   
   # Binding id_order, qnt, list items
@@ -146,7 +147,6 @@ trans_id <- ord_df1 %>%
     group_by(id_order) %>% 
     summarise(created_date,yDate, state, qnt=n, total_paid, tot_itm, diff=total_paid-tot_itm)
   
-  
   itm_df %>% 
     filter(id_order %in% Data$id_order) %>% 
     select(id_order, sku) %>% 
@@ -154,7 +154,7 @@ trans_id <- ord_df1 %>%
     select(-sku) %>% 
     filter(!is.na(manual_categories)) %>% 
     write_csv("D:/UBIQUM/GITHUB/Task04_AssociationBetweenProducts/trans_categories.csv")
-
+  
   # Plot down the Findings
 ggplot(data = Data) +
   geom_point(mapping = aes(x = tot_itm, y = total_paid))
